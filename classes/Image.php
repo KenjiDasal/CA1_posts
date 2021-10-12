@@ -2,7 +2,7 @@
 class Image
 {
   public $id;
-  public $filename;
+  public $file;
 
   public function __construct()
   {
@@ -50,7 +50,7 @@ class Image
         $row = $select_stmt->Fetch(PDO::FETCH_ASSOC);
         $image = new Image();
         $image->id = $row['id'];
-        $image->filename = $row['filename'];
+        $image->file = $row['file'];
       }
     } finally {
       if ($db !== null && $db->is_open()) {

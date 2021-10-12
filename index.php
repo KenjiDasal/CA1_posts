@@ -22,8 +22,13 @@ $posts = Post::findAll();
           <div class="row">
           <?php foreach ($posts as $post) { ?>
             <div class="col mb-4">
+              <?php $post_img = Image::findById($post->img_id);
+              if  ($post_img !== null) { 
+              ?> 
               <div class="card py-5 px-5">
-                <img src="<?= APP_URL ?>" class="card-img-top" alt="...">
+                <img src="<?= APP_URL . "/" . $post_img->file; ?>" style="max-width: 50%" class="card-img-top" alt="...">
+
+                <?php }?>
                 <div class="card-body">
                   <h5 class="card-title"><?= $post->title ?></h5>
                   <p class="card-text"><?= get_words($post->description, 20) ?></p>
@@ -35,6 +40,7 @@ $posts = Post::findAll();
                 
               </div>
             </div>
+            
           <?php } ?>
           </div>
         </div>
