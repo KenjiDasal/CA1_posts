@@ -91,7 +91,7 @@ try {
 
               <div class="form-group">
                 <label class="labelHidden" for="venueDescription">Author Name</label>
-                <input placeholder="Author Name" type="author_name" name="author_name" id="author_name" class="form-control" value="<?= old("author_namel", $post->author_namel) ?>" />
+                <input placeholder="Author Name" type="author_name" name="author_name" id="author_name" class="form-control" value="<?= old("author_name", $post->author_name) ?>" />
                 <span class="error"><?= error("author_name") ?></span>
               </div>
 
