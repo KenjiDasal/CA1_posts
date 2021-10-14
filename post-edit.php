@@ -1,7 +1,7 @@
 <?php
-// the class Festival defines the structure of what every festival object will look like. ie. each festival will have an id, title, description etc...
+// the class post defines the structure of what every post object will look like. ie. each post will have an id, title, description etc...
 // NOTE : For handiness I have the very same spelling as the database attributes
-class Festival {
+class Post {
   public $id;
   public $title;
   public $description;
@@ -33,16 +33,16 @@ class Festival {
       ];
 
       // We will uncomment this code when we get to do the Create 
-      // If there is no ID yet, then it's a new festival being created for the first time
+      // If there is no ID yet, then it's a new post being created for the first time
       // if ($this->id === null) {
-      //   $sql = "INSERT INTO festivals (" .
+      //   $sql = "INSERT INTO posts (" .
       //     "title, description, author_name, likes, date, contact_name, contact_email, contact_phone, img_id" .
       //     ") VALUES (" .
       //     ":title, :description, :author_name, :likes, :date, :contact_name, :contact_email, :contact_phone, :img_id" .
       //     ")";
       // } else {
-        // if there is an ID then it's an update for an existing festival in the database. 
-        $sql = "UPDATE festivals SET " .
+        // if there is an ID then it's an update for an existing post in the database. 
+        $sql = "UPDATE posts SET " .
           "title = :title, " .
           "description = :description, " .
           "author_name = :author_name, " .
@@ -64,10 +64,10 @@ class Festival {
       }
 
       if ($stmt->rowCount() !== 1) {
-        throw new Exception("Failed to save festival.");
+        throw new Exception("Failed to save post.");
       }
 
-      //If the save() was a new festival created it won't have an ID
+      //If the save() was a new post created it won't have an ID
       // so retrieve the ID assigned by the DB. - remember auto_increment in the Database for assigning primary keys
       // if ($this->id === null) {
       //   $this->id = $conn->lastInsertId();
@@ -86,7 +86,7 @@ class Festival {
       $db->open();
       $conn = $db->get_connection();
 
-      $sql = "DELETE FROM festivals WHERE id = :id";
+      $sql = "DELETE FROM posts WHERE id = :id";
       $params = [
         ":id" => $this->id
       ];
@@ -101,7 +101,7 @@ class Festival {
       }
 
       if ($stmt->rowCount() !== 1) {
-        throw new Exception("Failed to delete festival.");
+        throw new Exception("Failed to delete post.");
       }
     } finally {
       if ($db !== null && $db->is_open()) {
@@ -111,7 +111,7 @@ class Festival {
   }
 
   public static function findAll() {
-    $festivals = array();
+    $posts = array();
 
     try {
       // call DB() in DB.php to create a new database object - $db
@@ -122,7 +122,7 @@ class Festival {
       
 
       // $select_sql is a variable containing the correct SQL that we want to pass to the database
-      $select_sql = "SELECT * FROM festivals";
+      $select_sql = "SELECT * FROM posts";
       $select_stmt = $conn->prepare($select_sql);
       // $the SQL is sent to the database to be executed, and true or false is returned 
       $select_status = $select_stmt->execute();
@@ -133,26 +133,26 @@ class Festival {
         $message = "SQLSTATE error code = ".$error_info[0]."; error message = ".$error_info[2];
         throw new Exception("Database error executing database query: " . $message);
       }
-      // if we get here the select worked correctly, so now time to process the festivals that were retrieved
+      // if we get here the select worked correctly, so now time to process the posts that were retrieved
       
 
       if ($select_stmt->rowCount() !== 0) {
         $row = $select_stmt->fetch(PDO::FETCH_ASSOC);
         while ($row !== FALSE) {
-          // Create $festival object, then put the id, title, description, author_name etc into $festival
-          $festival = new Festival();
-          $festival->id = $row['id'];
-          $festival->title = $row['title'];
-          $festival->description = $row['description'];
-          $festival->author_name = $row['author_name'];
-          $festival->likes = $row['likes'];
-          $festival->date = $row['date'];
-          $festival->img_id = $row['img_id'];
+          // Create $post object, then put the id, title, description, author_name etc into $post
+          $post = new post();
+          $post->id = $row['id'];
+          $post->title = $row['title'];
+          $post->description = $row['description'];
+          $post->author_name = $row['author_name'];
+          $post->likes = $row['likes'];
+          $post->date = $row['date'];
+          $post->img_id = $row['img_id'];
 
-          // $festival now has all it's attributes assigned, so put it into the array $festivals[] 
-          $festivals[] = $festival;
+          // $post now has all it's attributes assigned, so put it into the array $posts[] 
+          $posts[] = $post;
           
-          // get the next festival from the list and return to the top of the loop
+          // get the next post from the list and return to the top of the loop
           $row = $select_stmt->fetch(PDO::FETCH_ASSOC);
         }
       }
@@ -163,19 +163,19 @@ class Festival {
       }
     }
 
-    // return the array of $festivals to the calling code - index.php (about line 6)
-    return $festivals;
+    // return the array of $posts to the calling code - index.php (about line 6)
+    return $posts;
   }
 
   public static function findById($id) {
-    $festival = null;
+    $post = null;
 
     try {
       $db = new DB();
       $db->open();
       $conn = $db->get_connection();
 
-      $select_sql = "SELECT * FROM festivals WHERE id = :id";
+      $select_sql = "SELECT * FROM posts WHERE id = :id";
       $select_params = [
           ":id" => $id
       ];
@@ -191,14 +191,14 @@ class Festival {
       if ($select_stmt->rowCount() !== 0) {
         $row = $select_stmt->fetch(PDO::FETCH_ASSOC);
           
-        $festival = new Festival();
-        $festival->id = $row['id'];
-        $festival->title = $row['title'];
-        $festival->description = $row['description'];
-        $festival->author_name = $row['author_name'];
-        $festival->likes = $row['likes'];
-        $festival->date = $row['date'];
-        $festival->img_id = $row['img_id'];
+        $post = new post();
+        $post->id = $row['id'];
+        $post->title = $row['title'];
+        $post->description = $row['description'];
+        $post->author_name = $row['author_name'];
+        $post->likes = $row['likes'];
+        $post->date = $row['date'];
+        $post->img_id = $row['img_id'];
       }
     }
     finally {
@@ -207,7 +207,7 @@ class Festival {
       }
     }
 
-    return $festival;
+    return $post;
   }
 
   
