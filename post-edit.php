@@ -1,138 +1,215 @@
-<?php require_once 'config.php';
+<?php
+// the class Festival defines the structure of what every festival object will look like. ie. each festival will have an id, title, description etc...
+// NOTE : For handiness I have the very same spelling as the database attributes
+class Festival {
+  public $id;
+  public $title;
+  public $description;
+  public $author_name;
+  public $likes;
+  public $date;
+  public $img_id;
 
-try {
-  $rules = [
-    'post_id' => 'present|integer|min:1'
-  ];
-  $request->validate($rules);
-  if (!$request->is_valid()) {
-    throw new Exception("Illegal request");
-  }
-  $post_id = $request->input('post_id');
-  /*Retrieving a customer object*/
-  $post = PostfindById($post_id);
-  if ($post === null) {
-    throw new Exception("Illegal request parameter");
-  }
-} catch (Exception $ex) {
-  $request->session()->set("flash_message", $ex->getMessage());
-  $request->session()->set("flash_message_class", "alert-warning");
 
-  $request->redirect("/post-index.php");
+
+  public function __construct() {
+    $this->id = null;
+  }
+
+  public function save() {
+    try {
+      //Create the usual database connection - $conn
+      $db = new DB();
+      $db->open();
+      $conn = $db->get_connection();
+
+      $params = [
+        ":title" => $this->title,
+        ":description" => $this->description,
+        ":author_name" => $this->author_name,
+        ":likes" => $this->likes,
+        ":date" => $this->date,
+        ":img_id" => $this->img_id
+      ];
+
+      // We will uncomment this code when we get to do the Create 
+      // If there is no ID yet, then it's a new festival being created for the first time
+      // if ($this->id === null) {
+      //   $sql = "INSERT INTO festivals (" .
+      //     "title, description, author_name, likes, date, contact_name, contact_email, contact_phone, img_id" .
+      //     ") VALUES (" .
+      //     ":title, :description, :author_name, :likes, :date, :contact_name, :contact_email, :contact_phone, :img_id" .
+      //     ")";
+      // } else {
+        // if there is an ID then it's an update for an existing festival in the database. 
+        $sql = "UPDATE festivals SET " .
+          "title = :title, " .
+          "description = :description, " .
+          "author_name = :author_name, " .
+          "likes = :date, " .
+          "date = :date, " .
+          "img_id = :img_id " .
+          "WHERE id = :id";
+        $params[":id"] = $this->id;
+    //  }
+
+
+      $stmt = $conn->prepare($sql);
+      $status = $stmt->execute($params);
+
+      if (!$status) {
+        $error_info = $stmt->errorInfo();
+        $message = "SQLSTATE error code = " . $error_info[0] . "; error message = " . $error_info[2];
+        throw new Exception("Database error executing database query: " . $message);
+      }
+
+      if ($stmt->rowCount() !== 1) {
+        throw new Exception("Failed to save festival.");
+      }
+
+      //If the save() was a new festival created it won't have an ID
+      // so retrieve the ID assigned by the DB. - remember auto_increment in the Database for assigning primary keys
+      // if ($this->id === null) {
+      //   $this->id = $conn->lastInsertId();
+      // }
+    } finally {
+      if ($db !== null && $db->is_open()) {
+        $db->close();
+      }
+    }
+  }
+
+  public function delete() {
+    try {
+      /*Create connection.*/
+      $db = new DB();
+      $db->open();
+      $conn = $db->get_connection();
+
+      $sql = "DELETE FROM festivals WHERE id = :id";
+      $params = [
+        ":id" => $this->id
+      ];
+
+      $stmt = $conn->prepare($sql);
+      $status = $stmt->execute($params);
+
+      if (!$status) {
+        $error_info = $stmt->errorInfo();
+        $message = "SQLSTATE error code = " . $error_info[0] . "; error message = " . $error_info[2];
+        throw new Exception("Database error executing database query: " . $message);
+      }
+
+      if ($stmt->rowCount() !== 1) {
+        throw new Exception("Failed to delete festival.");
+      }
+    } finally {
+      if ($db !== null && $db->is_open()) {
+        $db->close();
+      }
+    }
+  }
+
+  public static function findAll() {
+    $festivals = array();
+
+    try {
+      // call DB() in DB.php to create a new database object - $db
+      $db = new DB();
+      $db->open();
+      // $conn has a connection to the database
+      $conn = $db->get_connection();
+      
+
+      // $select_sql is a variable containing the correct SQL that we want to pass to the database
+      $select_sql = "SELECT * FROM festivals";
+      $select_stmt = $conn->prepare($select_sql);
+      // $the SQL is sent to the database to be executed, and true or false is returned 
+      $select_status = $select_stmt->execute();
+
+      // if there's an error display something sensible to the screen. 
+      if (!$select_status) {
+        $error_info = $select_stmt->errorInfo();
+        $message = "SQLSTATE error code = ".$error_info[0]."; error message = ".$error_info[2];
+        throw new Exception("Database error executing database query: " . $message);
+      }
+      // if we get here the select worked correctly, so now time to process the festivals that were retrieved
+      
+
+      if ($select_stmt->rowCount() !== 0) {
+        $row = $select_stmt->fetch(PDO::FETCH_ASSOC);
+        while ($row !== FALSE) {
+          // Create $festival object, then put the id, title, description, author_name etc into $festival
+          $festival = new Festival();
+          $festival->id = $row['id'];
+          $festival->title = $row['title'];
+          $festival->description = $row['description'];
+          $festival->author_name = $row['author_name'];
+          $festival->likes = $row['likes'];
+          $festival->date = $row['date'];
+          $festival->img_id = $row['img_id'];
+
+          // $festival now has all it's attributes assigned, so put it into the array $festivals[] 
+          $festivals[] = $festival;
+          
+          // get the next festival from the list and return to the top of the loop
+          $row = $select_stmt->fetch(PDO::FETCH_ASSOC);
+        }
+      }
+    }
+    finally {
+      if ($db !== null && $db->is_open()) {
+        $db->close();
+      }
+    }
+
+    // return the array of $festivals to the calling code - index.php (about line 6)
+    return $festivals;
+  }
+
+  public static function findById($id) {
+    $festival = null;
+
+    try {
+      $db = new DB();
+      $db->open();
+      $conn = $db->get_connection();
+
+      $select_sql = "SELECT * FROM festivals WHERE id = :id";
+      $select_params = [
+          ":id" => $id
+      ];
+      $select_stmt = $conn->prepare($select_sql);
+      $select_status = $select_stmt->execute($select_params);
+
+      if (!$select_status) {
+        $error_info = $select_stmt->errorInfo();
+        $message = "SQLSTATE error code = ".$error_info[0]."; error message = ".$error_info[2];
+        throw new Exception("Database error executing database query: " . $message);
+      }
+
+      if ($select_stmt->rowCount() !== 0) {
+        $row = $select_stmt->fetch(PDO::FETCH_ASSOC);
+          
+        $festival = new Festival();
+        $festival->id = $row['id'];
+        $festival->title = $row['title'];
+        $festival->description = $row['description'];
+        $festival->author_name = $row['author_name'];
+        $festival->likes = $row['likes'];
+        $festival->date = $row['date'];
+        $festival->img_id = $row['img_id'];
+      }
+    }
+    finally {
+      if ($db !== null && $db->is_open()) {
+        $db->close();
+      }
+    }
+
+    return $festival;
+  }
+
+  
 }
-
 ?>
-<!doctype html>
-<html lang="en">
-
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-  <title>Edit post</title>
-
-  <link href="<?= APP_URL ?>/assets/css/bootstrap.min.css" rel="stylesheet" />
-  <link href="<?= APP_URL ?>/assets/css/template.css" rel="stylesheet">
-  <link href="<?= APP_URL ?>/assets/css/style.css" rel="stylesheet">
-  <link href="<?= APP_URL ?>/assets/css/form.css" rel="stylesheet">
-  <link href="https://fonts.googleapis.com/css2?family=Lato:wght@300;400&display=swap" rel="stylesheet">
-
-
-</head>
-
-<body>
-  <div class="container-fluid p-0">
-    <?php require 'include/navbar.php'; ?>
-    <main role="main">
-      <div>
-        <div class="row d-flex justify-content-center">
-          <h1 class="t-peta engie-head pt-5 pb-5">Edit post</h1>
-        </div>
-
-        <div class="row justify-content-center">
-          <div class="col-lg-8">
-            <?php require "include/flash.php"; ?>
-          </div>
-        </div>
-
-        <div class="row justify-content-center pt-4">
-          <div class="col-lg-10">
-            <form method="post" action="<?= APP_URL ?>/post-update.php" enctype="multipart/form-data">
-
-              <!--This is how we pass the ID-->
-              <input type="hidden" name="post_id" value="<?= $post->id ?>" />
-
-
-              <div class="form-group">
-                <label class="labelHidden" for="ticketPrice">Title</label>
-                <input placeholder="Title" name="title" type="text" id="title" class="form-control" value="<?= old('title', $post->title) ?>" />
-                <span class="error"><?= error("title") ?></span>
-              </div>
-
-              <!--textarea does not have a 'value' attribute, so in this case we have to put our php for filling in the old form data INSIDE the textarea tag.-->
-              <div class="form-group">
-                <label class="labelHidden" for="date">Description</label>
-                <textarea placeholder="Description" name="description" rows="3" id="description" class="form-control"><?= old('description', $post->description) ?></textarea>
-                <span class="error"><?= error("description") ?></span>
-              </div>
-
-              <div class="form-group">
-                <label class="labelHidden" for="date">Description</label>
-                <textarea placeholder="Likes" name="likes" rows="3" id="likes" class="form-control"><?= old('likes', $post->likes) ?></textarea>
-                <span class="error"><?= error("likes") ?></span>
-              </div>
-
-              <div class="form-group">
-                <label class="labelHidden" for="startDate">Date</label>
-                <input placeholder="Date" type="date" name="date" class="dateInput form-control" id="startDate" value="<?= old("date", $post->date) ?>" />
-                <span class="error"><?= error("date") ?></span>
-              </div>
-
-              
-
-              <div class="form-group">
-                <label class="labelHidden" for="venueDescription">Author Name</label>
-                <input placeholder="Author Name" type="author_name" name="author_name" id="author_name" class="form-control" value="<?= old("author_name", $post->author_name) ?>" />
-                <span class="error"><?= error("author_name") ?></span>
-              </div>
-
-              <div class="form-group">
-                <label class="labelHidden" for="venueDescription">Contact Phone</label>
-                <input placeholder="Contact Phone" type="text" name="contact_phone" id="contactPhone" class="form-control" value="<?= old("contact_phone", $post->contact_phone) ?>" />
-                <span class="error"><?= error("contact_phone") ?></span>
-              </div>
-
-
-              <div class="form-group">
-                <label>Profile image:</label>
-                <?php
-                $image = Image::findById($post->img_id);
-                if ($image != null) {
-                ?>
-                  <img src="<?= APP_URL . "/" . $image->file ?>" width="150px" />
-                <?php
-                }
-                ?>
-                <input type="file" name="profile" id="profile" />
-                <span class="error"><?= error("profile") ?></span>
-              </div>
-
-              <div class="form-group">
-                <a class="btn btn-default" href="<?= APP_URL ?>/post-index.php">Cancel</a>
-                <button type="submit" class="btn btn-primary">Store</button>
-              </div>
-            </form>
-          </div>
-        </div>
-      </div>
-    </main>
-    <?php require 'include/footer.php'; ?>
-  </div>
-  <script src="<?= APP_URL ?>/assets/js/jquery-3.5.1.min.js"></script>
-  <script src="<?= APP_URL ?>/assets/js/bootstrap.bundle.min.js"></script>
-  <script src="<?= APP_URL ?>/assets/js/post.js"></script>
-
-  <script src="https://kit.fontawesome.com/fca6ae4c3f.js" crossorigin="anonymous"></script>
-
-</body>
-
-</html>
