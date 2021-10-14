@@ -84,7 +84,7 @@ catch (Exception $ex){
                         <?php
                             // We have the image_id for the post, now call findById(image_id) in the class Image.php
                             // Image:: findById($image_id) will go to the database to get the image file from the Image table 
-                            $image = Image::findById($post->image_id);
+                            $image = Image::findById($post->img_id);
                             if ($image !== null){
                                 ?>
                                 <img src="<?= APP_URL . "/" . $image->file ?>" width="50px" alt="image" />

@@ -7,7 +7,7 @@ $posts = Post::findAll();
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-    <title>Music posts</title>
+    <title>Digital Posts</title>
 
     <link href="<?= APP_URL ?>/assets/css/bootstrap.min.css" rel="stylesheet" />
     <link href="<?= APP_URL ?>/assets/css/template.css" rel="stylesheet">

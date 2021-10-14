@@ -8,7 +8,7 @@
         <a class="nav-link" href="<?= APP_URL ?>/index.php">Home</a>
       </li>
       <li class="nav-item">
-        <a class="nav-link" href="#">About us</a>
+        <a class="nav-link" href="post-index.php">About us</a>
       </li>
       <li class="nav-item">
         <a class="nav-link" href="#">Contact us</a>

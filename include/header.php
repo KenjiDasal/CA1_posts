@@ -1,3 +1,3 @@
 <header>
-  <h1>Music festivals</h1>
+  <h1>Digital Posts</h1>
 </header>
