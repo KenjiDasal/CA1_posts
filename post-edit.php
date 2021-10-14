@@ -46,7 +46,7 @@ class Post {
           "title = :title, " .
           "description = :description, " .
           "author_name = :author_name, " .
-          "likes = :date, " .
+          "likes = :likes, " .
           "date = :date, " .
           "img_id = :img_id " .
           "WHERE id = :id";
